@@ -1,5 +1,7 @@
 # my_website
 
-*ITALICS*
+*This is the READ ME file of my website*
 
-**BOLD**
+Hello World!
+
+**By Pablo Carrera Lorenzo**
