@@ -1,14 +1,14 @@
 # banner
 banner:
-  title : "Hi! I’m <br> Christoher <br> UX designer"
+  title : "Hi! I’m <br> Pablo, <br> tech and finance passionate"
 
 # about
 about:
   enable : true
-  content : "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+  content : "I am an industrial engineer from Galicia, Spain, passionate about the financial industry and the endless potential of technology to revolutionalise the sector. I came to London, one of the greates financial hubs in the world, to study a Masters in Financial Analysis at London Business School and become a participant in the future of finance."
   button:
     enable : true
-    label : "know more"
+    label : "More about me and my CV"
     URL : "about"
 
 # skill
