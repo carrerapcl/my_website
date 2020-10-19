@@ -5,7 +5,7 @@ banner:
 # about
 about:
   enable : true
-  content : "I am an industrial engineer from Galicia, Spain, passionate about the financial industry and the endless potential of technology to revolutionalise the sector. I came to London, one of the greates financial hubs in the world, to study a Masters in Financial Analysis at London Business School and become a participant in the future of finance."
+  content : "I am an industrial engineer from Galicia, Spain, passionate about the financial industry and the endless potential of technology to revolutionalise this sector. I have come to London, one of the greatest financial hubs in the world, to study a Masters in Financial Analysis at London Business School and become a participant in the future of finance."
   button:
     enable : true
     label : "More about me and my CV"
@@ -13,7 +13,7 @@ about:
 
 # skill
 skill:
-  enable : true
+  enable : false
   title : "Skills"
   item:
     - title : "Web Design"
@@ -38,44 +38,44 @@ experience:
   title : "Experience"
   item: 
     - logo : "images/experience/icon-1.png"
-      title : "Junior UX Designer"
-      company : "WEBEX"
-      duration : "Jan 2007 - Feb 2009"
+      title : "Marketing and Organisation Manager"
+      company : "UVigo Motorsport (start-up)"
+      duration : "Oct 2016 - Jan 2018"
       
     - logo : "images/experience/icon-2.png"
-      title : "UX & UI Designer"
-      company : "AUGMEDIX"
-      duration : "Mar 2009 - Aug 2014"
+      title : "Analyst - Global IFRS & Offerings Services"
+      company : "Deloitte"
+      duration : "Sep 2018 - Dec 2019"
       
-    - logo : "images/experience/icon-1.png"
-      title : "Senior UI Designer"
-      company : "THEMEFISHER"
-      duration : "Sep 2014 - Present"
+    - logo : "images/experience/icon-3.png"
+      title : "Associate - Financial Services Consulting"
+      company : "KPMG"
+      duration : "Jan 2020 - Jul"
 
 # education
 education:
   enable : true
   title : "Education"
   item:
-    - title : "Marters in UX Design"
-      year : "2006"
-      academy : "Masassusets Institute of Technology"
+    - title : "Masters in Financial Analysis"
+      year : "2020"
+      academy : "London Business School"
       
-    - title : "Honours in Fine Arts"
-      year : "2004"
-      academy : "Harvard University"
+    - title : "SAS Base and SQL Programming Certificate"
+      year : "2019"
+      academy : "SAS Institute"
       
-    - title : "Higher Secondary Certificat"
-      year : "2000"
-      academy : "Cardiff School"
+    - title : "BSc in Industrial Organisation Engineering"
+      year : "2014 - 2018"
+      academy : "University of Vigo"
       
-    - title : "Secondary School Certificate"
-      year : "1998"
-      academy : "Cardiff School"
+    - title : "High School Certificate"
+      year : "2014"
+      academy : "IES de Mos"
 
 # service
 service:
-  enable : true
+  enable : false
   title : "Services"
   item:
     - title : "UI Design"
@@ -102,7 +102,7 @@ portfolio:
 
 # testimonial
 testimonial:
-  enable : true
+  enable : false
   title : "Testimonials"
   item:
     - name : "Jesica Gomez"
@@ -156,6 +156,6 @@ clients_logo_slider:
 
 # blog
 blog:
-  enable : true
+  enable : false
   title : "Blogs"
   # blog post comes from "content/blog" folder
