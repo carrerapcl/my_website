@@ -1,5 +1,5 @@
 # default configuration
-baseURL = "https://pablocarrera.netlify.app"
+baseURL = "https://pablocarrera.netlify.app/"
 languageCode = "en-us"
 summaryLength = "10"
 theme = "kross-hugo"
