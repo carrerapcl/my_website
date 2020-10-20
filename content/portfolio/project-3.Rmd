@@ -1,16 +1,69 @@
 ---
+title: "Yield curve inversion"
+client: Self-work
+date: '2020-10-05T12:14:34+06:00'
+description: This is meta description.
+draft: no
+image: images/portfolio/yield.jpg
+project_url: https://fred.stlouisfed.org/
 categories:
 - Data analytics
 - Finance
 - Fixed income
-client: Self-work
-date: "2020-10-05T12:14:34+06:00"
-description: This is meta description.
-draft: false
-image: images/portfolio/yield.jpg
-project_url: https://fred.stlouisfed.org/
-title: Yield curve inversion
 ---
+
+---
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE, 
+                      tidy=FALSE,
+                      size="small")
+options(digits = 3)
+
+#figure sizes
+knitr::opts_chunk$set(fig.width=6.75, 
+                      fig.height=6.75,
+                      fig.align = "center")
+```
+
+```{r load-libraries, echo=FALSE}
+library(vroom)
+library(mosaic)
+library(skimr)
+library(leaflet)
+library(tidyverse)
+library(ggthemes)
+library(GGally)
+library(readxl)
+library(here)
+library(janitor)
+library(broom)
+library(tidyquant)
+library(infer)
+library(openintro)
+library(tidyquant)
+library(scales)
+library(ggfortify)
+library(huxtable)
+library(flextable)
+library (ggplot2)
+library (car)
+library (kableExtra)
+library (grid)
+library (gridExtra)
+
+# Huxtable automatically format *all* tables. This turns that off.
+options('huxtable.knit_print_df' = FALSE)
+```
 
 Every so often, we hear warnings from commentators on the "inverted yield curve" and its predictive power with respect to recessions. An explainer what a [inverted yield curve is can be found here](https://www.reuters.com/article/us-usa-economy-yieldcurve-explainer/explainer-what-is-an-inverted-yield-curve-idUSKBN1O50GA). If you'd rather listen to something, here is a great podcast from [NPR on yield curve indicators](https://www.podbean.com/media/share/dir-4zgj9-6aefd11)
 
@@ -254,3 +307,8 @@ labs(title = "Yield Curve Inversion: 10 year minus 3 months U.S Treasury rates",
   theme_bw()
 
 ```
+
+
+
+
+

@@ -12,23 +12,31 @@ project_url: projects.fivethirtyeight.com/trump-approval-ratings
 title: Predictive model for AirBnB prices in Istambul
 ---
 
-#### Summary
+---
+title: "Airbnb Istanbul"
+author: "Group 22: Pablo Carrera Lorenzo, Celine Chi, Alex Kirk, Hans-Christian Preyer, Luca Toraldo, and Yirui Xu"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE, 
+                      tidy=FALSE,
+                      size="small")
+options(digits = 3)
 
-In the following Assignment, we forecast the total cost for two tourists staying four nights in an Airbnb in Istanbul. To carry out this order, we have downloaded the data from insideairbnb.com.
-
-We carried out the following steps to prepare the Data:
-
-1. First, we imported the data with "vroom". Then we looked at the data set and determined the variables that were important for us. We also examined the data in detail and decided how we would clean up the data set.
-
-2. For our second step, we started to cleanse the data. We treated missing data, changed the property to the correct variables (character variables to numeric values). 
-
-3. We also created new variables. For example, we clustered the apartment type, taking the four largest and filtering the rest to "Others" or we counted the minimum nights and filtered for minimum nights less than or equal to four since we determine the price for tourists who only want to stay four nights.
-
-4. We have also noticed that our data set has many outliers. To get rid of outliers, we have taken out prices above 2000 and equal to 0, because we believe that these prices are unrealistic since there, for example, no places for free
-
-After we cleaned, adjusted and visualised the data, we started modelling with different factors. After variations of models with different factors, we found our model with the best fitted R-square. Then we filtered by our assumptions, such as two bedrooms, one bathroom, located in the city centre, and found our predicted price with a confidence interval of 95%. *Our model predicted a price for two people to stay four nights in Istanbul of USD 670.8*, with a 95% confidence interval between USD 644.74 and USD 697.92.
-
-Before starting, let's load the necessary libraries:
+#figure sizes
+knitr::opts_chunk$set(fig.width=6.75, 
+                      fig.height=6.75,
+                      fig.align = "center")
+```
 
 ```{r load-libraries, echo=FALSE}
 library(vroom)
@@ -60,7 +68,23 @@ library (gridExtra)
 options('huxtable.knit_print_df' = FALSE)
 ```
 
-#### Preparing the data - Data wrangling, handling missing values, outliers, etc
+# Summary
+
+In the following Assignment, we forecast the total cost for two tourists staying four nights in an Airbnb in Istanbul. To carry out this order, we have downloaded the data from insideairbnb.com.
+
+We carried out the following steps to prepare the Data:
+
+1. First, we imported the data with "vroom". Then we looked at the data set and determined the variables that were important for us. We also examined the data in detail and decided how we would clean up the data set.
+
+2. For our second step, we started to cleanse the data. We treated missing data, changed the property to the correct variables (character variables to numeric values). 
+
+3. We also created new variables. For example, we clustered the apartment type, taking the four largest and filtering the rest to "Others" or we counted the minimum nights and filtered for minimum nights less than or equal to four since we determine the price for tourists who only want to stay four nights.
+
+4. We have also noticed that our data set has many outliers. To get rid of outliers, we have taken out prices above 2000 and equal to 0, because we believe that these prices are unrealistic since there, for example, no places for free
+
+After we cleaned, adjusted and visualised the data, we started modelling with different factors. After variations of models with different factors, we found our model with the best fitted R-square. Then we filtered by our assumptions, such as two bedrooms, one bathroom, located in the city centre, and found our predicted price with a confidence interval of 95%. *Our model predicted a price for two people to stay four nights in Istanbul of USD 670.8*, with a 95% confidence interval between USD 644.74 and USD 697.92.
+
+# Preparing the data - Data wrangling, handling missing values, outliers, etc
 
 We load the data:
 
@@ -192,7 +216,7 @@ listing <- listing %>%
   filter(minimum_nights <= 4)
 ```
 
-##### Dealing with outliers
+## Dealing with outliers
 
 Additionally, before starting to build models we should explore if there are outliers that could affect them. We want to build predictive models using data of normal properties, discarding especial situations such as staying at a palace for a price 100 times higher than the average hotel. We can use histograms to check those possible outliers in price.
 
@@ -236,7 +260,7 @@ ggplot(listing_clean, mapping = aes(y = reorder(prop_type_simplified, price, med
 
 After dealing with the outliers, the data set is ready for our analysis.
 
-#### Mapping
+# Mapping
 
 Visualisations of feature distributions and their relations are key to understanding a data set, and they can open up new lines of exploration. While it is not the main objective of this project to go into geospatial visualisations with R, we will make a map of Istanbul, and overlay all AirBnB coordinates to get an overview of the spatial distribution of AirBnB rentals. For this visualisation we use the `leaflet` package, which includes a variety of tools for interactive maps, so we can easily zoom in-out, click on a point to get the actual AirBnB listing for that specific point, etc.
 
@@ -255,7 +279,7 @@ leaflet(data = filter(listing, minimum_nights <= 4)) %>%
 ```
 
 
-#### Regression analysis
+# Regression analysis
   
 This is the core of this project. We are going develop a regression model to predict the cost for two guests for staying 4 nights in the city.
 
@@ -434,7 +458,7 @@ model6 %>% broom::glance()
 
 ```
 
-##### Grouping properties by city area
+## Grouping properties by city area
 
 Lastly, we saw when we skimmed through the data that there are 3 more variables related to neighbourhoods: `neighbourhood`, `neighbourhood_cleansed`, and `neighbourhood_group_cleansed`. If there are many different neighbourhoods in Istanbul, which is probably the case, it wouldn’t make sense to include them all in our model. First, we will check how many different neighbourhoods are in Istanbul, using `neighbourhood_cleansed`, which is equal to `neighbourhood` but excluding accents and special characters from the words. We must say also that `neighbourhood_group_cleansed` is not relevant, as it is missing in all observations.
 
@@ -505,7 +529,7 @@ model7 %>% broom::glance()
 ```
 
 
-#### Final model
+# Final model
 
 At this point, we think that `model7` has enough predictive capability for price, with an adjusted R-squared of 0.443. The next step is to look for signs of multi-colinearity, as high correlation between independent (explanatory) variables causes problems in the regression calculations, because in the case of multi-colinearity the independent variables "rob" one another of explanatory power. For this test, we will use `car::vif(model_x)` to calculate the Variance Inflation Factor (VIF) for your predictors. Our benchmark will be that A VIF larger than 5 means that our model suffers from colinearity.
 
@@ -516,7 +540,7 @@ car::vif(model7)
 
 There is no VIF value above 5, so we do not have to remove any variable.
 
-##### Comparison of residuals between models
+## Comparison of residuals between models
 
 Continuing with the diagnosis of our model, we are also interested in checking the residuals. For this, we will use `autoplot` combined with `ggfortify` package that allows `autoplot` to be used with more object types, such as `lm()` (regressions). 
 
@@ -576,7 +600,7 @@ ggfortify:::autoplot.lm(model7) +
 
 * Residuals vs Leverage: This plot helps us to find influential cases if any, as not all outliers are influential in linear regression. In our models, there are no influential cases, as we can't see Cook’s distance lines (a red dashed line) because all cases are well inside of the Cook’s distance lines.
 
-##### Summary of the models developed
+## Summary of the models developed
 
 During the development of our models, we have been assessing the improvements and the value of our changes looking at the p-values and adjusted R-squared, leading to the conclusion that our last model (`model7`) has the best predictive capacity. However, let us recap all the models that we have developed so far and compare the improvements between them. We will do this using `huxtable`.
 
@@ -594,7 +618,7 @@ huxtable::huxreg(model1, model2, model3, model4, model5, model6, model7,
 
 ```
 
-#### Prediction
+# Prediction
 
 Finally, it is the moment to use our best model (`model7`) for prediction. We will use it to predict the total cost to stay at an Airbnb for four nights. The prediction will be made for an apartment with a private room, have at least ten reviews, and an average rating of at least 90. As we are looking for an Airbnb for tourist, we make the assumption that the tourist wants to live in the city centre. Additionally, we make the assumption that we need two bedrooms and one shared bathroom. The appropriate 95% confidence interval will be included, and both the point prediction and interval will be reported in terms of `price_4_nights`. As we used a `log(price_4_nights)` model, we will use anti-log to convert the value in $.
 
@@ -625,3 +649,8 @@ paste("The predicted price for two people to stay four nights in Istanbul is $",
 
 
 ```
+
+
+
+
+
