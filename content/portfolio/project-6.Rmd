@@ -1,17 +1,70 @@
 ---
+title: "Studying health in Africa through Gapminder"
+client: Self-work
+date: '2020-10-15T12:14:34+06:00'
+description: This is meta description.
+draft: no
+image: images/portfolio/africa.jpg
+project_url: https://www.gapminder.org/data/
 categories:
 - Data analytics
 - Social impact
 - Modelling
-client: Self-work
-date: "2020-10-15T12:14:34+06:00"
-description: This is meta description.
-draft: false
-image: images/portfolio/africa.jpg
-project_url: https://www.gapminder.org/data/
-title: Studying health in Africa through Gapminder
 ---
 
+---
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE, 
+                      tidy=FALSE,
+                      size="small")
+options(digits = 3)
+
+#figure sizes
+knitr::opts_chunk$set(fig.width=6.75, 
+                      fig.height=6.75,
+                      fig.align = "center")
+```
+
+```{r load-libraries}
+library(openxlsx)
+library(vroom)
+library(mosaic)
+library(skimr)
+library(leaflet)
+library(tidyverse)
+library(ggthemes)
+library(GGally)
+library(readxl)
+library(here)
+library(janitor)
+library(broom)
+library(tidyquant)
+library(infer)
+library(openintro)
+library(tidyquant)
+library(scales)
+library(ggfortify)
+library(huxtable)
+library(flextable)
+library (ggplot2)
+library (car)
+library (kableExtra)
+library (grid)
+library (gridExtra)
+library(httr)
+library(tidytext)
+```
 
 #### Gapminder revisited
 
@@ -31,6 +84,7 @@ hiv <- read_csv(here::here("data","adults_with_hiv_percent_age_15_49.csv"))
 life_expectancy <- read_csv(here::here("data","life_expectancy_years.csv"))
 
 indicators <- c("SP.DYN.TFRT.IN","SE.PRM.NENR", "SH.DYN.MORT", "NY.GDP.PCAP.KD")
+
 library(wbstats)
 
 worldbank_data <- wb_data(country="countries_only",

@@ -3,13 +3,66 @@ categories:
 - Data analytics
 - Data science
 client: Self-work
-date: "2020-09-25T12:14:34+06:00"
+date: '2020-09-25'
 description: This is meta description.
-draft: false
+draft: no
 image: images/portfolio/usa.jpg
 project_url: projects.fivethirtyeight.com/trump-approval-ratings
-title: Trump's Approbal Margins
+title: "Trump's Approbal Margins"
 ---
+
+---
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE, 
+                      tidy=FALSE,
+                      size="small")
+options(digits = 3)
+
+#figure sizes
+knitr::opts_chunk$set(fig.width=6.75, 
+                      fig.height=6.75,
+                      fig.align = "center")
+```
+
+```{r load-libraries, echo=FALSE}
+library(vroom)
+library(mosaic)
+library(skimr)
+library(leaflet)
+library(tidyverse)
+library(ggthemes)
+library(GGally)
+library(readxl)
+library(here)
+library(janitor)
+library(broom)
+library(tidyquant)
+library(infer)
+library(openintro)
+library(tidyquant)
+library(scales)
+library(ggfortify)
+library(huxtable)
+library(flextable)
+library (ggplot2)
+library (car)
+library (kableExtra)
+library (grid)
+library (gridExtra)
+
+# Huxtable automatically format *all* tables. This turns that off.
+options('huxtable.knit_print_df' = FALSE)
+```
 
 #### Politics: Trump's Approbal Margins
 
@@ -85,3 +138,8 @@ trump_ci_compare
 ```
 
 We can see that confidence interval for week 15 is slightly narrower than that for week 34 due to a higher standard deviation driving a higher standard error. This may be due to a combination of data that was released in mid-August, including a not-improving COVID-19 situation in the United States coupled with disappointing economic data. The wider confidence interval results in a wider array of values over which we can be 95% confident represent the true share of the population that approves of the President. 
+
+
+
+
+

@@ -1,17 +1,68 @@
 ---
+title: "Youth Risk Behavior Surveillance"
+client: Self-work
+date: '2020-10-12T12:14:34+06:00'
+description: This is meta description.
+draft: no
+image: images/portfolio/youth.jpeg
+project_url: cdc.gov/healthyyouth/data/
 categories:
 - Data analytics
 - Social impact
 - Hypothesis testing
-client: Self-work
-date: "2020-10-12T12:14:34+06:00"
-description: This is meta description.
-draft: false
-image: images/portfolio/youth.jpeg
-project_url: cdc.gov/healthyyouth/data/
-title: Youth Risk Behavior Surveillance
 ---
 
+---
+output:
+  html_document:
+    theme: flatly
+    highlight: zenburn
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+    code_folding: show
+---
+
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE, 
+                      tidy=FALSE,
+                      size="small")
+options(digits = 3)
+
+#figure sizes
+knitr::opts_chunk$set(fig.width=6.75, 
+                      fig.height=6.75,
+                      fig.align = "center")
+```
+
+```{r load-libraries, echo=FALSE}
+library(openxlsx)
+library(vroom)
+library(mosaic)
+library(skimr)
+library(leaflet)
+library(tidyverse)
+library(ggthemes)
+library(GGally)
+library(readxl)
+library(here)
+library(janitor)
+library(broom)
+library(tidyquant)
+library(infer)
+library(openintro)
+library(tidyquant)
+library(scales)
+library(ggfortify)
+library(huxtable)
+library(flextable)
+library (ggplot2)
+library (car)
+library (kableExtra)
+library (grid)
+library (gridExtra)
+```
 
 Every two years, the Centers for Disease Control and Prevention conduct the [Youth Risk Behavior Surveillance System (YRBSS)](https://www.cdc.gov/healthyyouth/data/yrbs/index.htm) survey, where it takes data from high schoolers (9th through 12th grade), to analyze health patterns. You will work with a selected group of variables from a random sample of observations during one of the years the YRBSS was conducted.
 
@@ -19,25 +70,25 @@ Every two years, the Centers for Disease Control and Prevention conduct the [You
 
 This data is part of the `openintro` textbook and we can load and inspect it. There are observations on 13 different variables, some categorical and some numerical. The meaning of each variable can be found by bringing up the help file:
 
-```{r load-libraries, echo=FALSE}
-
-library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
+```{r}
+library(vroom)
 library(mosaic)
+library(skimr)
+library(leaflet)
+library(tidyverse)
 library(ggthemes)
 library(GGally)
-library(readxl)
 library(here)
-library(skimr)
 library(janitor)
 library(broom)
 library(tidyquant)
 library(infer)
-library(openintro)
 library(tidyquant)
+library(scales)
+library(ggfortify)
+library (ggplot2)
 
-```
-
-```{r}
+library(openintro)
 
 data(yrbss)
 glimpse(yrbss)
