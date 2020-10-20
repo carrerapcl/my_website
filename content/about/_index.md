@@ -1,6 +1,6 @@
 ---
 author_image: images/about/foto_cv.jpg
-author_signature: images/about/signature.png
+author_signature: images/about/mysignature.png
 description: This is meta description.
 draft: false
 title: About

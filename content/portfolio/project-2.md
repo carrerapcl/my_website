@@ -1,31 +1,627 @@
 ---
 categories:
-- branding
-client: John Doe
-date: "2019-05-12T12:14:34+06:00"
+- Data science
+- Modelling
+- Predictive models
+client: Self-work
+date: "2020-10-20T12:14:34+06:00"
 description: This is meta description.
 draft: false
-image: images/portfolio/item-2.png
-project_url: https://themefisher.com/
-title: Artwork Design
+image: images/portfolio/airbnb.jpg
+project_url: projects.fivethirtyeight.com/trump-approval-ratings
+title: Predictive model for AirBnB prices in Istambul
 ---
 
-#### Project Requirements
+#### Summary
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore
-et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-mollit anim id est laborum.
+In the following Assignment, we forecast the total cost for two tourists staying four nights in an Airbnb in Istanbul. To carry out this order, we have downloaded the data from insideairbnb.com.
+
+We carried out the following steps to prepare the Data:
+
+1. First, we imported the data with "vroom". Then we looked at the data set and determined the variables that were important for us. We also examined the data in detail and decided how we would clean up the data set.
+
+2. For our second step, we started to cleanse the data. We treated missing data, changed the property to the correct variables (character variables to numeric values). 
+
+3. We also created new variables. For example, we clustered the apartment type, taking the four largest and filtering the rest to "Others" or we counted the minimum nights and filtered for minimum nights less than or equal to four since we determine the price for tourists who only want to stay four nights.
+
+4. We have also noticed that our data set has many outliers. To get rid of outliers, we have taken out prices above 2000 and equal to 0, because we believe that these prices are unrealistic since there, for example, no places for free
+
+After we cleaned, adjusted and visualised the data, we started modelling with different factors. After variations of models with different factors, we found our model with the best fitted R-square. Then we filtered by our assumptions, such as two bedrooms, one bathroom, located in the city centre, and found our predicted price with a confidence interval of 95%. *Our model predicted a price for two people to stay four nights in Istanbul of USD 670.8*, with a 95% confidence interval between USD 644.74 and USD 697.92.
+
+Before starting, let's load the necessary libraries:
+
+```{r load-libraries, echo=FALSE}
+library(vroom)
+library(mosaic)
+library(skimr)
+library(leaflet)
+library(tidyverse)
+library(ggthemes)
+library(GGally)
+library(readxl)
+library(here)
+library(janitor)
+library(broom)
+library(tidyquant)
+library(infer)
+library(openintro)
+library(tidyquant)
+library(scales)
+library(ggfortify)
+library(huxtable)
+library(flextable)
+library (ggplot2)
+library (car)
+library (kableExtra)
+library (grid)
+library (gridExtra)
+
+# Huxtable automatically format *all* tables. This turns that off.
+options('huxtable.knit_print_df' = FALSE)
+```
+
+#### Preparing the data - Data wrangling, handling missing values, outliers, etc
+
+We load the data:
+
+```{r load-data}
+listings <- vroom("http://data.insideairbnb.com/turkey/marmara/istanbul/2020-06-28/data/listings.csv.gz")
+glimpse(listings)
+```
+
+We can rapidly see our `listings` data frame using `glimpse()` function. Below is a description of the most important variables for this project:
+
+* price: cost per night
+
+* cleaning_fee: cleaning fee
+
+* extra_people: charge for having more than 1 person
+
+* property_type: type of accommodation (House, Apartment, etc.)
+
+* room_type:
+    - Entire home/apt (guests have entire place to themselves)
+    - Private room (Guests have private room to sleep, all other rooms shared)
+    - Shared room (Guests sleep in room shared with others)
 
 
-#### Project Details
+* number_of_reviews: Total number of reviews for the listing
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
-dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
-laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia
-consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est.
+* review_scores_rating: Average review score (0 - 100)
+
+* longitude, latitude: geographical coordinates to help us locate the listing
+
+* neighbourhood: three variables on a few major neighbourhoods
+
+The first step is to prepare the data for our work, by modifying the variables that need so.
+
+With the `glimpse()` function before, we have seen that `price`, `cleaning_fee` and `extra_people` is a character variable, but it would be more useful and logical for them to be numeric (double). We transform those variables with the following code.
+
+```{r price-numeric}
+listing <- listings %>% 
+  mutate(price = parse_number(price)) %>% 
+  mutate(weekly_price = parse_number(weekly_price)) %>%
+  mutate(monthly_price = parse_number(monthly_price)) %>%
+  mutate(security_deposit = parse_number(security_deposit)) %>% 
+  mutate(cleaning_fee = parse_number(cleaning_fee)) %>% 
+  mutate(extra_people = parse_number(extra_people))
+
+#With typeof() we check that the type of variable has changed correctly to double
+typeof(listing$price)
+typeof(listing$weekly_price)
+typeof(listing$monthly_price)
+typeof(listing$security_deposit)
+typeof(listing$cleaning_fee)
+typeof(listing$extra_people)
+```
+
+We `skim()` through the data set to get some more information. For example, for every data set it is worth checking if there is something weird regarding missing values, such as important variables having a lot of (or all) missing values.
+
+```{r}
+skim(listing)
+```
+
+
+It calls our attention that there are 13600 missing values for `cleaning_fee`. However, this is an example of data that is missing not at random, since there is a specific pattern/explanation: quite probably, the cleaning fee for those properties is $0 and thus a missing value is actually a 0. We add this modification below.
+
+```{r}
+listing <- listing %>%
+  mutate(cleaning_fee = case_when(
+    is.na(cleaning_fee) ~ 0, 
+    TRUE ~ cleaning_fee
+  ))
+```
+
+Now, let's examine `property_type`, as it is an important variable to describe the general characteristics one should expect from the property. We can use the `count()` function to determine how many categories are there and their frequency.
+
+```{r}
+#List of the type of properties and their frequency:
+listing_type <- listing %>% 
+  count(property_type) %>% 
+  arrange(desc(n)) %>% 
+  mutate(share = n / sum(n), share=scales::percent(share))
+listing_type
+```
+
+```{r}
+#Top 4 categories represent the vast majority of properties.
+#Calculate this percentage:
+listing_type_sum <- listing_type %>% 
+  summarise(share = n / sum(n)) %>% 
+  head(4) %>% 
+  summarise(sum = sum(share))
+listing_type_sum
+```
+
+We see that the four most common property types are Apartment, Serviced apartment, House, and Boutique hotel; with 81.5% of properties being represented by these four categories.
+
+Since the vast majority of the observations in the data are one of the top four or five property types, we would like to create a simplified version of `property_type` variable that has 5 categories: the top four categories and `Other`.
+
+```{r}
+listing <- listing %>%
+  mutate(prop_type_simplified = case_when(
+    property_type %in% c("Apartment","Serviced apartment", "House","Boutique hotel") ~ property_type, 
+    TRUE ~ "Other"
+  ))
+
+#Check that prop_type_simplified was correctly made:
+listing_prop_sum <- listing %>%
+  count(property_type, prop_type_simplified) %>%
+  arrange(desc(n))
+listing_prop_sum
+```
+
+Airbnb is most commonly used for travel purposes, i.e., as an alternative to traditional hotels. We only want to include listings in our regression analysis that are intended for travel purposes.
+
+Thus, our last step in preparing the data for analysis will be to study `minimum_nights` variable in order to define the most common values and how they are related to the different purposes of Airbnb listings. Remember, we want to exclude other purposes different than traveling, such as short-term rentals for work, etc.
+
+```{r}
+#We check the different values for minimum_nights and their frequency:
+listing_nights <- listing %>% 
+  count(minimum_nights) %>% 
+  arrange(desc(n))
+listing_nights  
+```
+
+We see that the most common value for `minimum_nights` is 1, following by 2 and 3. These values look like what we would expect from any property listed for tourists. However, 7 and 30 are also relatively common minimum night requirements, reflecting one week and one month stays, respectively. These are reflections of common time intervals that hosts would like to rent their properties for, likely not for tourism purposes, at least not for the average stay for travelers. These hosts could be looking for less turnover on their properties over longer periods of time by having fewer independent guests, targeting a different market from tourism, such as short-term rents for business purposes or newcomers to Istanbul.
+
+Hence, those properties which are not destined for tourists should be out of the scope of our analysis. For that, we will filter out all properties with a minimum stay of more than 4 nights.
+
+```{r}
+listing <- listing %>% 
+  filter(minimum_nights <= 4)
+```
+
+##### Dealing with outliers
+
+Additionally, before starting to build models we should explore if there are outliers that could affect them. We want to build predictive models using data of normal properties, discarding especial situations such as staying at a palace for a price 100 times higher than the average hotel. We can use histograms to check those possible outliers in price.
+
+```{r}
+ggplot(listing, mapping = aes(x = price)) +
+  geom_histogram() +
+  scale_x_continuous() +
+  labs(title = "Distribution of price",
+       y = "Number of properties") +
+  theme_bw()
+```
+
+We can see extreme outliers in the price variable. As we said before, we are not interested in these extreme cases for our predictive model, as these can be properties with very special characteristics, very luxurious, or with an absurd price because the host does not want to acomodate hosts at that moment. We will filter out the values above 5000, and run the plot again.
+
+```{r}
+listing_clean <- listing %>% 
+  filter(price<5000)
+
+ggplot(listing_clean, mapping = aes(x = price)) +
+  geom_histogram() +
+  scale_x_continuous() +
+  labs(title = "Distribution of price",
+       y = "Number of properties") +
+  theme_bw()
+```
+
+We still see a very fat tail in the last histogram, so we will make one last correction, filtering out outliers with a price greater that 2000, and also discarding the properties with a price of 0, as a property for free does not make sense.
+
+```{r}
+#We will also filter out, just in case, values with a price of 0.
+listing_clean <- listing %>% 
+  filter(price<2000, price>0)
+
+ggplot(listing_clean, mapping = aes(y = reorder(prop_type_simplified, price, median), x = price)) +
+  geom_boxplot() +
+  scale_x_continuous() +
+  labs(title = "Distribution of price and outliers",
+       y = "Type of property") +
+  theme_bw()
+```
+
+After dealing with the outliers, the data set is ready for our analysis.
+
+#### Mapping
+
+Visualisations of feature distributions and their relations are key to understanding a data set, and they can open up new lines of exploration. While it is not the main objective of this project to go into geospatial visualisations with R, we will make a map of Istanbul, and overlay all AirBnB coordinates to get an overview of the spatial distribution of AirBnB rentals. For this visualisation we use the `leaflet` package, which includes a variety of tools for interactive maps, so we can easily zoom in-out, click on a point to get the actual AirBnB listing for that specific point, etc.
+
+The following code, having created a dataframe `listings` with all AirbnB listings in Bordeaux, will plot on the map all AirBnBs where `minimum_nights` is less than equal to four (4).
+
+```{r}
+leaflet(data = filter(listing, minimum_nights <= 4)) %>% 
+  addProviderTiles("OpenStreetMap.Mapnik") %>% 
+  addCircleMarkers(lng = ~longitude, 
+                   lat = ~latitude, 
+                   radius = 1, 
+                   fillColor = "blue", 
+                   fillOpacity = 0.4, 
+                   popup = ~listing_url,
+                   label = ~property_type)
+```
+
+
+#### Regression analysis
+  
+This is the core of this project. We are going develop a regression model to predict the cost for two guests for staying 4 nights in the city.
+
+For the target variable "y", we will use the cost for two people to stay at an Airbnb location for four (4) nights. For this, we create a new variable called `price_4_nights` that uses `price`, `cleaning_fee`, `guests_included`, and `extra_people` to calculate the total cost for two people to stay at the Airbnb property for 4 nights. This is the variable "y" we want to explain.
+
+Now, we will use an histogram to examine the distributions of `price_4_nights`.
+
+```{r}
+listing_price <- listing_clean %>% 
+  mutate(price_4_nights = (price * 4) + cleaning_fee + (if_else(guests_included < 2, extra_people, 0)))
+
+ggplot(listing_price, aes(x = price_4_nights)) +
+        geom_histogram() +
+        labs(title = "Distribution of variable price_4_nights")
+```
+
+As the data is clearly right-skewed, we should use `log(price_4_nights)` for our regression model, as a majority of the values are clustered at the low end of the scale. This means that the high price listings create a positively skewed distribution that is difficult to interpret without a logarithmic scale.
+
+```{r}
+#Create log(price_4_nights)
+listing_price <- listing_price %>% 
+  mutate(log_price_4_nights = log(price_4_nights))
+```
+
+```{r}
+#Plot histogram with price_4_nights in logarithmic scale
+ggplot(listing_price, aes(x = log_price_4_nights)) +
+        geom_histogram() +
+        labs(title = "Distribution of variable ln(price_4_nights)")
+```
+
+Following, we will use `ggpairs` to produce a correlation scatterplot with selected numerical variables from the dataset.
+
+```{r}
+#using ggpairs to explore the relationship between some numeric variables of interest
+listing_price %>% 
+  select(log_price_4_nights, number_of_reviews, review_scores_rating, reviews_per_month, bathrooms, bedrooms, beds, accommodates) %>% 
+  ggpairs(aes(alpha=0.1))+
+  theme_bw()
+```
+
+As we see in the scatterplot, there is not very high correlation between `log_price_4_nights` and the other numerical variables, but they are still significant so we are going to test these variables in our model.
+
+In the next step, we fit a regression model called `model1` with the following explanatory variables: `prop_type_simplified`, `number_of_reviews`, and `review_scores_rating`.
+
+We will also use the package `broom::`"tidy models", with:
+* `tidy()` for model coefficients
+* `glance()` for model fit
+
+```{r}
+model1 <- lm(log_price_4_nights ~ prop_type_simplified +
+                                    number_of_reviews +
+                                    review_scores_rating,
+             data = listing_price)
+
+model1 %>% broom::tidy(conf.int = TRUE)
+
+```
+```{r}
+model1 %>% broom::glance()
+```
+
+
+As we obtained an adjusted R-squared value of 0.0135 in `model1`, we will assess if there are more significant variables to add to our model. Also, we can confirm our choice of `log(price_4_nights)` against `price_4_nights` as target variable by running the model with the latter, which gave a lower R-squared value, 0.0084 —that is, "worse" in terms of predictive power.
+
+First, we look at the coefficient of `review_scores_rating` in terms of `price_4_nights`. It is negatively correlated with price, and this can happen because guests may be more willing to give higher ratings for properties that did not cost them a lot. Similarly, those paying for more expensive properties probably expect more from their stay and are more likely to give unflattering reviews for minor inconveniences.
+
+Then, looking at the Property type (variable `prop_type_simplified`), we know that it is a categorical variable, so the coefficients for each of the property types is a reflection of the expected pricing discrepancy between the average apartment, which is the baseline, and the average Boutique hotel, House, etc. Because apartments represent the most basic offering on Airbnb, it makes sense that other, less common listings like boutique hotels and serviced apartments would command a higher price. The negative coefficient on houses is likely more a function of location, as houses in a major city like Istanbul would likely be much further from the city center than apartments.
+
+We would also like to determine if `room_type` is a significant predictor of the cost for 4 nights, given everything else in the model. For that, we fit another regression model called `model2` that includes all of the explanantory variables in `model1` plus `room_type.`
+
+```{r}
+model2 <- lm(log_price_4_nights ~ prop_type_simplified + number_of_reviews + review_scores_rating + room_type, data = listing_price)
+model2 %>% broom::tidy(conf.int = TRUE)
+
+```
+```{r}
+
+model2 %>% broom::glance()
+```
+
+
+After running the model, we see that `room_type` is a significant predictor of the price for 4 nights, as each of the room type categorical variables is statistically significant at the 95% confidence level: their p-value are less than the usual significance level of 0.05.
+
+Let's keep looking for which predictors are significant for our target variable. For example, it is probable that some other characteristics of the properties will help us to predict its price. So we will add to our model the variables `bathrooms`, `bedrooms`, `beds`, and `accommodates` (size of the house).
+
+```{r}
+
+model3 <- lm(log_price_4_nights ~ prop_type_simplified +
+                                  number_of_reviews + 
+                                  review_scores_rating + 
+                                  room_type +
+                                  bathrooms +
+                                  bedrooms +
+                                  beds +
+                                  accommodates,
+             data = listing_price)
+model3 %>% broom::tidy(conf.int = TRUE)
+
+```
+```{r}
+model3 %>% broom::glance()
+```
+We see that all of the variables added are significant, especially the size of the house (`accommodates`). Thus, we will add them to our model.
+
+Now, we will also check if superhosts (`host_is_superhost`) command a pricing premium, after controlling for other variables.
+
+```{r}
+
+model4 <- lm(log_price_4_nights ~ prop_type_simplified +
+                                  number_of_reviews + 
+                                  review_scores_rating + 
+                                  room_type +
+                                  bathrooms +
+                                  bedrooms +
+                                  beds +
+                                  accommodates +
+                                  host_is_superhost,
+             data = listing_price)
+model4 %>% broom::tidy(conf.int = TRUE)
+
+```
+```{r}
+model4 %>% broom::glance()
+```
+
+Indeed, we see that `host_is_superhost` is significant. Let us now explore the significance of the location of the properties. Our data set has several variables related to this. To begin with, most owners advertise the exact location of their listing (`is_location_exact == TRUE`), while a non-trivial proportion don’t. Let's see if this is a significant predictor of `price_4_nights`.
+
+```{r}
+
+model5 <- lm(log_price_4_nights ~ prop_type_simplified +
+                                  number_of_reviews + 
+                                  review_scores_rating + 
+                                  room_type +
+                                  bathrooms +
+                                  bedrooms +
+                                  beds +
+                                  accommodates +
+                                  host_is_superhost+
+                                  is_location_exact,
+             data = listing_price)
+model5 %>% broom::tidy(conf.int = TRUE)
+
+```
+```{r}
+model5 %>% broom::glance()
+```
+
+We see that `is_location_exact` is significant, and this seems logical because low price properties can have their not-so-good location as a reason, so there is incentive for the hosts not to show the exact street or address.
+
+Another variable that could be useful for our model is `cancellation_policy`. As with the previous ones, our hypothesis is that it will be significant, in this case because a flexible cancellation policy is in the interest of many guests thus it could derive in a price premium. As usual, we will confirm its significance by looking at the p-value after running `model6`.
+
+```{r}
+
+model6 <- lm(log_price_4_nights ~ prop_type_simplified +
+                                  number_of_reviews + 
+                                  review_scores_rating + 
+                                  room_type +
+                                  bathrooms +
+                                  bedrooms +
+                                  beds +
+                                  accommodates +
+                                  is_location_exact +
+                                  host_is_superhost+
+                                  cancellation_policy,
+             data = listing_price)
+
+model6 %>% broom::tidy(conf.int = TRUE)
+
+
+
+```
+```{r}
+
+model6 %>% broom::glance()
+
+```
+
+##### Grouping properties by city area
+
+Lastly, we saw when we skimmed through the data that there are 3 more variables related to neighbourhoods: `neighbourhood`, `neighbourhood_cleansed`, and `neighbourhood_group_cleansed`. If there are many different neighbourhoods in Istanbul, which is probably the case, it wouldn’t make sense to include them all in our model. First, we will check how many different neighbourhoods are in Istanbul, using `neighbourhood_cleansed`, which is equal to `neighbourhood` but excluding accents and special characters from the words. We must say also that `neighbourhood_group_cleansed` is not relevant, as it is missing in all observations.
+
+```{r}
+
+#List of the different neighbourhoods and their frequency:
+listing_neighbourhood <- listing_price %>% 
+  count(neighbourhood_cleansed) %>% 
+  arrange(desc(n)) %>% 
+  mutate(share = n / sum(n), share=scales::percent(share))
+listing_neighbourhood
+  
+```
+
+With 39 different neighbourhoods, we need to group them together so the majority of listings falls in fewer geographical areas. For this, we will create a new categorical variable `neighbourhood_simplified` and determine whether location is a predictor of `price_4_nights`.
+
+The areas would be divided in a simple way that is applied by the average tourist when going to the city. First, there is the city centre, at the left of the Bosphorus, with the East area on the right (also called "Asian side"). Then, the remaining areas are the neighbourhoods of North, West, and finally the outskirts of the city.
+
+```{r}
+
+#List of the different neighbourhood and their frequency:
+listing_price <- listing_price %>%
+  mutate(neighbourhood_simplified = case_when(
+    neighbourhood_cleansed %in% c("Catalca", "Silivri", "Buyukcekmece", "Sile", "Arnavutkoy", "Pendik", "Tuzla", "Beykoz", "Cekmekoy", "Adalar", "Kartal", "Sancaktepe", "Sultanbeyli") 
+                                  ~ "Outskirt",
+    neighbourhood_cleansed %in% c("Eyup", "Sariyer") 
+                                  ~ "North",
+    neighbourhood_cleansed %in% c("Beylikduzu", "Esenyurt", "Basaksehir", "Avcilar", "Kucukcekmece", "Bakirkoy", "Bahcelievler", "Bagcilar", "Esenler", "Sultangazi", "Gaziosmanpasa", "Gungoren", "Bayrampasa") 
+                                  ~ "West",
+    neighbourhood_cleansed %in% c("Uskudar", "Maltepe", "Atasehir", "Umraniye", "Kadikoy") 
+                                  ~ "East (Asian side)", 
+    neighbourhood_cleansed %in% c("Beyoglu", "Sisli", "Fatih", "Besiktas", "Kagithane", "Zeytinburnu") 
+                                  ~ "Centre"
+  ))
+
+#Test that it has been created correctly:
+#listing_test <- listing %>% 
+#  count(neighbourhood_simplified) %>% 
+#  arrange(desc(n)) %>% 
+#  mutate(share = n / sum(n), share=scales::percent(share))
+#listing_1_test
+  
+```
+
+With the new geographical areas determined, we can add `neighbourhood_simplified` to the model and confirm its significance.
+
+```{r}
+
+model7 <- lm(log_price_4_nights ~ prop_type_simplified +
+                                  number_of_reviews + 
+                                  review_scores_rating + 
+                                  room_type +
+                                  bathrooms +
+                                  bedrooms +
+                                  beds +
+                                  accommodates +
+                                  is_location_exact +
+                                  cancellation_policy +
+                                  neighbourhood_simplified+
+                                  host_is_superhost+
+                                  reviews_per_month,
+             data = listing_price)
+model7 %>% broom::tidy(conf.int = TRUE)
+
+```
+```{r}
+model7 %>% broom::glance()
+```
+
+
+#### Final model
+
+At this point, we think that `model7` has enough predictive capability for price, with an adjusted R-squared of 0.443. The next step is to look for signs of multi-colinearity, as high correlation between independent (explanatory) variables causes problems in the regression calculations, because in the case of multi-colinearity the independent variables "rob" one another of explanatory power. For this test, we will use `car::vif(model_x)` to calculate the Variance Inflation Factor (VIF) for your predictors. Our benchmark will be that A VIF larger than 5 means that our model suffers from colinearity.
+
+```{r}
+#Look for signs of multi-colinearity (VIF > 5)
+car::vif(model7)
+```
+
+There is no VIF value above 5, so we do not have to remove any variable.
+
+##### Comparison of residuals between models
+
+Continuing with the diagnosis of our model, we are also interested in checking the residuals. For this, we will use `autoplot` combined with `ggfortify` package that allows `autoplot` to be used with more object types, such as `lm()` (regressions). 
+
+```{r}
+#Using autoplot to check residuals of our regression model
+ggfortify:::autoplot.lm(model1) +
+  labs(subtitle = "Model 1") +
+  theme_bw()
+```
+```{r}
+#Using autoplot to check residuals of our regression model
+ggfortify:::autoplot.lm(model2) +
+  labs(subtitle = "Model 2") +
+  theme_bw()
+```
+
+```{r}
+#Using autoplot to check residuals of our regression model
+ggfortify:::autoplot.lm(model3) +
+  labs(subtitle = "Model 3") +
+  theme_bw()
+```
+
+```{r}
+#Using autoplot to check residuals of our regression model
+ggfortify:::autoplot.lm(model4) +
+  labs(subtitle = "Model 4") +
+  theme_bw()
+```
+
+```{r}
+#Using autoplot to check residuals of our regression model
+ggfortify:::autoplot.lm(model5) +
+  labs(subtitle = "Model 5") +
+  theme_bw()
+```
+
+```{r}
+#Using autoplot to check residuals of our regression model
+ggfortify:::autoplot.lm(model6) +
+  labs(subtitle = "Model 6") +
+  theme_bw()
+```
+
+```{r}
+#Using autoplot to check residuals of our regression model
+ggfortify:::autoplot.lm(model7) +
+  labs(subtitle = "Model 7") +
+  theme_bw()
+```
+
+* Residuals vs Fitted: There is no clear pattern in the plot. If we had pattern, it would mean that the data have a linear relationship, which was not defined by the model and was omitted out in the residuals.
+
+* Normal Q-Q: The Normal Q-Q Plot only has a limited S form. If we cut off more outliers, we would get a straighter line. The S shape means that we have extremer values at the tails - meaning we have very low/very high prices for there given characteristics.
+
+* Scale-Location: This plot shows if residuals are spread equally along with the ranges of predictors. This is how one can check the assumption of equal variance. It’s acceptable if you see a horizontal line with equally spread points. Our Data set looks like the residuals are spread randomly.
+
+* Residuals vs Leverage: This plot helps us to find influential cases if any, as not all outliers are influential in linear regression. In our models, there are no influential cases, as we can't see Cook’s distance lines (a red dashed line) because all cases are well inside of the Cook’s distance lines.
+
+##### Summary of the models developed
+
+During the development of our models, we have been assessing the improvements and the value of our changes looking at the p-values and adjusted R-squared, leading to the conclusion that our last model (`model7`) has the best predictive capacity. However, let us recap all the models that we have developed so far and compare the improvements between them. We will do this using `huxtable`.
+
+```{r}
+
+# Produce summary table comparing models using huxtable::huxreg()
+huxtable::huxreg(model1, model2, model3, model4, model5, model6, model7,
+       statistics = c('#observations' = 'nobs', 
+                      'R squared' = 'r.squared', 
+                      'Adj. R Squared' = 'adj.r.squared', 
+                      'Residual SE' = 'sigma'), 
+       bold_signif = 0.05, 
+       stars = NULL
+)
+
+```
+
+#### Prediction
+
+Finally, it is the moment to use our best model (`model7`) for prediction. We will use it to predict the total cost to stay at an Airbnb for four nights. The prediction will be made for an apartment with a private room, have at least ten reviews, and an average rating of at least 90. As we are looking for an Airbnb for tourist, we make the assumption that the tourist wants to live in the city centre. Additionally, we make the assumption that we need two bedrooms and one shared bathroom. The appropriate 95% confidence interval will be included, and both the point prediction and interval will be reported in terms of `price_4_nights`. As we used a `log(price_4_nights)` model, we will use anti-log to convert the value in $.
+
+```{r}
+
+# Adjust the data set to the specifications of our prediction (the type of property whose price we want to predict)
+
+prediction_Istanbul <- listing_price %>% 
+  
+        filter(room_type == "Private room",
+        number_of_reviews >= 10,
+        review_scores_rating >= 90,
+        prop_type_simplified == "Apartment",
+        bathrooms == 1,
+        bedrooms == 2,
+        beds == 2,
+        accommodates == 2,
+        is_location_exact = TRUE,
+        cancellation_policy == "flexible",
+        neighbourhood_simplified == c("Centre"))
+
+#Anti-log price by calculatin its exponential value, because exp(ln(x)) = x
+
+model_predictions_log <- exp(predict(model7, newdata = prediction_Istanbul, interval = "confidence"))
+
+
+paste("The predicted price for two people to stay four nights in Istanbul is $", round( model_predictions_log [1], 2), "with a 95% confidence interval between $", round(model_predictions_log[2], 2), "and $", round(model_predictions_log[3],2))
+
+
+```

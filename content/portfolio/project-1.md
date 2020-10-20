@@ -6,73 +6,82 @@ client: Self-work
 date: "2020-09-25T12:14:34+06:00"
 description: This is meta description.
 draft: false
-image: images/portfolio/item-1.png
-project_url: none
-title: Where Do People Drink The Most Beer, Wine And Spirits?
+image: images/portfolio/usa.jpg
+project_url: projects.fivethirtyeight.com/trump-approval-ratings
+title: Trump's Approbal Margins
 ---
 
-#### Project Requirements# Where Do People Drink The Most Beer, Wine And Spirits?
+#### Politics: Trump's Approbal Margins
 
-#### Project and data set
+We will analyse visually the evolution of the general opinion of American voters about the president Donald Trump, using fivethirtyeight.com and the detailed data it has on [all polls that track the president's approval](https://projects.fivethirtyeight.com/trump-approval-ratings).
 
-We are going to use the data about drinks consumption from library `fivethirtyeight`.
+```{r, cache=TRUE}
 
-```{r, load_alcohol_data}
-library(fivethirtyeight)
-data(drinks)
+approval_polllist <- read_csv(here::here('data', 'approval_polllist.csv'))
+glimpse(approval_polllist)
+approval_polllist_fix <- approval_polllist %>% 
+ mutate(
+        modeldate = mdy(modeldate),
+        startdate = mdy(startdate),
+        enddate = mdy(enddate),
+        createddate = mdy(createddate))
+        
 ```
 
-The drinks data has 1 character variable and 4 numeric variables and there are no missing values we should worry about.
+##### Create a plot
 
-```{r glimpse_skim_data}
-skim(drinks)
+Using this data we will calculate the average net approval rate (approve - disapprove) for each week since Trump got into office and create a plot that looks like this one.
+
+```{r trump_net_approval_rate, echo=FALSE, out.width="100%"}
+
+trump_ci <- approval_polllist_fix %>% 
+  mutate(year = year(enddate),
+         week = week(enddate),
+         net_approval = adjusted_approve - adjusted_disapprove) %>% 
+  group_by(year, week) %>% 
+  summarise(mean_approval = mean(net_approval),
+            SD_approval = sd(net_approval),
+            count_approval = n(),
+            t_critical = qt(0.975, count_approval - 1),
+            SE_approval = sd(net_approval) / sqrt(n()),
+            margin_approval = t_critical * SE_approval,
+            approval_low = mean_approval - margin_approval,
+            approval_high = mean_approval + margin_approval)
+            
+ggplot(trump_ci, aes(x = week, y = mean_approval, colour = as.factor(year))) + 
+  geom_point() +
+  geom_line() +
+  facet_wrap(~year) + 
+  geom_hline(yintercept = 0, color = "orange") +
+  scale_color_manual(values = c("orangered", "chartreuse3", "deepskyblue", "darkorchid1")) + 
+  geom_ribbon(aes(ymax = approval_high, ymin = approval_low), alpha = 0.1) +
+  theme(legend.position = "none") +
+  theme_bw() +
+  theme(legend.position="none", aspect.ratio = 1/3) + 
+  xlim(c(0, 53)) + 
+  ylim(c(-23, 7.5)) +
+  scale_x_continuous(breaks = c(0, 13, 26, 39, 52),
+                     limits = c(0, 52)) +
+  scale_y_continuous(breaks = c(-20.0, -17.5, -15.0, -12.5, -10.0, -7.5, -5.0, -2.5, 0.0, 2.5, 5.0, 7.5),
+                     limits = c(-22.0, 7.5)) +
+  labs (title = "Estimating Net Approval (approve-disapprove) for Donald Trump",
+        subtitle = "Weekly average of all polls",
+        caption = "Source: FiveThirtyEight",
+        x = "Week of the year",
+        y = "Average Net Approval (%)")
+        
 ```
 
-Below is a plot of the top 25 beer consuming countries.
+##### Compare Confidence Intervals
 
-```{r beer_plot}
-drinks_beer <- drinks %>% 
-  arrange(desc(beer_servings)) %>% 
-  head(25)
-ggplot(drinks_beer, aes(y = reorder(country, beer_servings), x = beer_servings)) + 
-  geom_col() + 
-  labs(title = "Global Beer Consumption", 
-       y = "",
-       x = "Beer Servings",
-       caption = "Source: FiveThirtyEight") +
-  theme_economist()
+Next we will compare the confidence intervals for `week 15` (6-12 April 2020) and `week 34` (17-23 August 2020).
+
+```{r, echo=FALSE, out.width="100%"}
+
+trump_ci_compare <- trump_ci %>% 
+  filter(year == 2020, week == c(15,34))
+trump_ci_compare
+
 ```
 
-Next is a plot that shows the top 25 wine consuming countries.
-
-```{r wine_plot}
-drinks_wine <- drinks %>% 
-  arrange(desc(wine_servings)) %>% 
-  head(25)
-ggplot(drinks_wine, aes(y = reorder(country, wine_servings), x = wine_servings)) + 
-  geom_col() + 
-  labs(title = "Global Wine Consumption", 
-       y = "",
-       x = "Wine Servings",
-       caption = "Source: FiveThirtyEight") +
-  theme_economist()
-```
-
-Finally, a plot that shows the top 25 spirit consuming countries.
-
-```{r spirit_plot}
-drinks_spirit <- drinks %>% 
-  arrange(desc(spirit_servings)) %>% 
-  head(25)
-ggplot(drinks_spirit, aes(y = reorder(country, spirit_servings), x = spirit_servings)) + 
-  geom_col() + 
-  labs(title = "Global Spirit Consumption", 
-       y = "",
-       x = "Spirit Servings",
-       caption = "Source: FiveThirtyEight") +
-  theme_economist()
-```
-
-Across the board, there appears to be a strong cultural bias to the types of alcohol that countries consume. For example, Germany is fourth on the chart for global annual beer consumption per person and France tops the wine consumption chart. Furthermore, particularly for beer and spirit consumption, countries that are culturally tied through history have similar consumption patterns. Namibia tops the chart for beer consumption, likely due to its status as a former German colony. A similar pattern exists on the spirits chart as well. Many of the countries in the former Soviet Union and Eastern Bloc appear on that chart, likely due to the common consumption of vodka. 
-
-Contrary to the beer and spirit categories, however, wine consumption is much less tied to shared cultural history and seems more reliant on shared geography and geographic proximity. Because wine is an alcoholic beverage that requires grapes grown in specific climates, it is not as easy to produce across the world. Therefore, the consumption of wine is heavily concentrated in Europe and thus close to the wine producing regions of France, Italy, and Portugal.
+We can see that confidence interval for week 15 is slightly narrower than that for week 34 due to a higher standard deviation driving a higher standard error. This may be due to a combination of data that was released in mid-August, including a not-improving COVID-19 situation in the United States coupled with disappointing economic data. The wider confidence interval results in a wider array of values over which we can be 95% confident represent the true share of the population that approves of the President. 

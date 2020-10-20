@@ -1,31 +1,203 @@
 ---
 categories:
-- design
-client: John Doe
-date: "2019-05-12T12:14:34+06:00"
+- Data analytics
+- Social impact
+- Modelling
+client: Self-work
+date: "2020-10-15T12:14:34+06:00"
 description: This is meta description.
 draft: false
-image: images/portfolio/item-6.png
-project_url: https://themefisher.com/
-title: Artwork Design
+image: images/portfolio/africa.jpg
+project_url: https://www.gapminder.org/data/
+title: Studying health in Africa through Gapminder
 ---
 
-#### Project Requirements
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore
-et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-mollit anim id est laborum.
+#### Gapminder revisited
 
+The `gapminder` data frame from the gapminder package contains just six columns from the larger [data in Gapminder World](https://www.gapminder.org/data/). Here, we will join a few data frames with more data than the 'gapminder' package. Specifically, we will look at data on:
 
-#### Project Details
+- Life expectancy at birth (life_expectancy_years.csv)
+- GDP per-capita in constant 2010 USD (https://data.worldbank.org/indicator/NY.GDP.PCAP.KD)
+- Female fertility: The number of babies per woman (https://data.worldbank.org/indicator/SP.DYN.TFRT.IN)
+- Primary school enrollment as a % of children attending primary school (https://data.worldbank.org/indicator/SE.PRM.NENR)
+- Mortality rate, for under 5, per 1,000 live births (https://data.worldbank.org/indicator/SH.DYN.MORT)
+- HIV prevalence (adults_with_hiv_percent_age_15_49.csv): The estimated number of people living with HIV per 100 population of age group 15-49.
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
-dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
-ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
-anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
-laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae
-dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia
-consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est.
+```{r, get_data, cache=TRUE}
+
+hiv <- read_csv(here::here("data","adults_with_hiv_percent_age_15_49.csv"))
+
+life_expectancy <- read_csv(here::here("data","life_expectancy_years.csv"))
+
+indicators <- c("SP.DYN.TFRT.IN","SE.PRM.NENR", "SH.DYN.MORT", "NY.GDP.PCAP.KD")
+library(wbstats)
+
+worldbank_data <- wb_data(country="countries_only",
+                          indicator = indicators, 
+                          start_date = 1960, 
+                          end_date = 2016)
+                          
+countries <-  wbstats::wb_cachelist$countries
+
+```
+
+We will join the 3 data frames (life_expectancy, worldbank_data, and HIV) into one. However, we first have to convert the data to tidy format, starting with the life_expectancy data. Next, we will tidy the HIV data and merge it with the life_expectancy data before finally merging it with the worldbank_data.
+
+The first plot shows the relationship between HIV prevalence in a population and life expectancy, grouped by region of the world.
+
+```{r}
+
+Mutatation_life_expectancy <- life_expectancy %>%
+  pivot_longer(cols = 2:300,
+               names_to = "year",
+               values_to = "life_expectancy") %>% 
+  select(!2:3)
+  
+Mutation_HIV_prevalence <- hiv %>%
+  pivot_longer(cols = 2:34,
+               names_to = "year",
+               values_to ="HIV_prevalence")
+               
+Combined_data1 <- left_join(Mutatation_life_expectancy, Mutation_HIV_prevalence, by = c("country","year"))
+
+Combined_data2 <- left_join(Combined_data1, countries, by = "country")
+
+Combined_data3 <- Combined_data2 %>% 
+  select(!5:11) %>% 
+  select(1:5)
+  
+Combined_hiv <- Combined_data3 %>% 
+  filter(!HIV_prevalence %in% NA) %>% 
+  filter(!region %in% NA)
+  
+ggplot(Combined_hiv, aes(x = HIV_prevalence, y = life_expectancy)) +
+  geom_point() +
+  geom_smooth(colour = "red", method = "lm") +
+  facet_wrap(~region) + 
+  scale_x_log10() +
+  theme_bw() +
+  labs(subtitle = "Relationship Between HIV Prevalence and Life Expectancy",
+         title = "HIV Around the World",
+         x = "HIV Prevalence",
+         y = "Life Expectancy")
+         
+```
+
+In general, there appears to only be a minor negative relationship between HIV prevalence and life expectancy. Because this data set covers the entire history of HIV, it reflects the impressive strides that humanity has made in improving patient outcomes for those living with the disease, even in the poorest and worst affected regions of the world. 
+
+This next plot examines the relationship between fertility rate and GDP per-capita.
+
+```{r, relationship_between_fertility_rate_and_GDP_per_capita}
+
+Combined_data4 <- left_join(worldbank_data, countries, by = "country")
+
+Combined_gdp <- Combined_data4 %>% 
+  filter(!NY.GDP.PCAP.KD %in% NA,
+         !SP.DYN.TFRT.IN %in% NA)
+         
+ggplot(Combined_gdp, aes(x = SP.DYN.TFRT.IN, y = NY.GDP.PCAP.KD)) +
+  geom_point() +
+  geom_smooth(colour="red", method = "lm") +
+  scale_y_log10(labels = dollar) +
+  facet_wrap(~region) +
+  theme_bw() +  
+  labs(subtitle = "Fertility Rate and GDP per Capita",
+         title = "Who has Babies?",
+         caption = "Source: World Bank",
+         x = "Fertility Rate",
+         y = "GDP per Capita")
+         
+```
+
+There is a very consistent negative relationship between fertility rate and GDP per capita. This matches with conventional wisdom and observations around the world in which richer countries have fewer children per woman as women enter the workforce and raising children becomes more expensive.
+
+Returning to HIV data, below is a bar chart of the number of missing observations for HIV data, grouped by region.
+
+```{r, missing_HIV_data}
+
+Combined_missing <- Combined_data3 %>%
+  filter(year >= 1979, is.na(HIV_prevalence), !region %in% NA) %>% 
+  group_by(region) %>%
+  summarise(count = count(country))
+  
+ggplot(Combined_missing, aes(x = count,y = reorder(region, count))) +
+  geom_col() + 
+  theme_bw() +
+  labs(subtitle = "Missing Data Observations",
+       title = "Data Deficiency",
+       x = "Count",
+       y = "")
+       
+```
+
+Below are two sets of charts, one showing the countries that have made the largest improvement in child mortality by region and the other showing those that have made the smallest improvement.
+
+```{r}
+
+Combined_mortality_top <- Combined_data4 %>%
+  filter(!SH.DYN.MORT %in% NA) %>% 
+  group_by(country, region) %>%
+  mutate(improvement = lag(SH.DYN.MORT) - SH.DYN.MORT) %>% 
+  filter(!improvement %in% NA) %>% 
+  summarize(improvement = sum(improvement)) %>% 
+  group_by(region) %>% 
+  slice_max(order_by = improvement, n = 5) %>% 
+  ungroup %>% 
+  mutate(region = as.factor(region),
+         country = reorder_within(country, improvement, region))
+         
+ggplot(Combined_mortality_top, aes(x = country, y = improvement)) +
+    geom_col() +
+    facet_wrap(~region, scales = "free") +
+    coord_flip() +
+    scale_x_reordered() +
+    scale_y_continuous() +
+    theme_bw() +
+    labs(title = "Save the Children", subtitle = "Largest Child Mortality Rate Improvement", x = "", y = "Rate Improvement", caption = "Source: World Bank")
+    
+Combined_mortality_bottom <- Combined_data4 %>%
+  filter(!SH.DYN.MORT %in% NA) %>% 
+  group_by(country, region) %>%
+  mutate(improvement = lag(SH.DYN.MORT) - SH.DYN.MORT) %>% 
+  filter(!improvement %in% NA) %>% 
+  summarize(improvement = sum(improvement)) %>% 
+  group_by(region) %>% 
+  slice_min(order_by = improvement, n = 5) %>% 
+  ungroup %>% 
+  mutate(region = as.factor(region),
+         country = reorder_within(country, improvement, region))
+         
+ggplot(Combined_mortality_bottom, aes(x = country, y = improvement)) +
+    geom_col() +
+    facet_wrap(~region, scales = "free") +
+    coord_flip() +
+    scale_x_reordered() +
+    scale_y_continuous() +
+    theme_bw() +
+    labs(title = "Save the Children", subtitle = "Smallest Child Mortality Rate Improvement", x = "", y = "Rate Improvement", caption = "Source: World Bank")
+    
+```
+
+Sub-Saharan Africa, the Middle East & North Africa, and South Asia appear to have seen the largest wholesale improvements in child mortality rate while Europe has seen the smallest improvement, likely due to starting at a higher base level. 
+
+This final chart will examine the relationship between fertility rate and and primary school enrollment. 
+
+```{r}
+
+Combined_primary <- Combined_data4 %>% 
+  filter(!SE.PRM.NENR %in% NA, !SP.DYN.TFRT.IN %in% NA)
+ggplot(Combined_primary, aes(x = SE.PRM.NENR, y = SP.DYN.TFRT.IN)) +
+  geom_point() +
+  geom_smooth(colour = "red", method = "lm") +
+  facet_wrap(~region) +
+  theme_bw() +
+  labs(subtitle = "Relationship between Fertility rate and Primary school enrollment", 
+       title = "Educate the Children",
+       caption = "Source: World Bank",
+       x = "Primary School Enrollment", 
+       y = "Fertility Rate")
+       
+```
+
+Similar to the relationship between fertility rate and GDP per capita, there is a strong negative correlation between primary school enrollment and fertility rate. A possible explanation is that the ability of a country to provide high levels of primary school education is strongly tied to its wealth, thus carrying the tie between GDP per capita and fertility to this relationship as well.
