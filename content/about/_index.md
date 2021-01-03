@@ -10,11 +10,11 @@ title: About
 
 I am a Spanish engineer who just moved to London to attend the *Masters in Financial  Analysis* at **London Business School**.
 
-Before starting the [MFA programme](<https://www.london.edu/masters-degrees/masters-in-financial-analysis>), I worked at Deloitte in the Global IFRS & Offerings Services team for a year, in Madrid. Then, I moved to a senior position in the Financial Services Consulting department at KPMG.
+Before starting the [MFA programme](<https://www.london.edu/masters-degrees/masters-in-financial-analysis>), I worked at Deloitte in the Global IFRS & Offerings Services and in the Financial Transformation teams for a year, in Madrid. Then, I moved to a senior position in the Financial Services Consulting department at KPMG.
 
 ### Origins
 
-However, I am not from Madrid. I was raised in a middle-class family close to Vigo, the biggest city in the region of Galicia, in the northwest of Spain. I had a lovely childhood there, but I wanted to live in London since the first time I visited the city, being 12 years old. Still, I really love Galicia, and I would like to enjoy its great summer weather every year, regardless the place in the world where I am living at any moment.
+However, I am not from Madrid. I was raised in a middle-class family close to Vigo, the biggest city in the region of Galicia, in the Northwest of Spain. I had a lovely childhood there, but I wanted to live in London since the first time I visited the city, being 12 years old. Still, I really love Galicia, and I would like to enjoy its great summer weather every year, regardless the place in the world where I am living at any moment.
 
 [comment]: # (This picture of Cies Islands summarize quite well Galician landscape:)
 
@@ -28,7 +28,7 @@ I studied industrial engineering at University of Vigo, and that was a very defi
 
 - Management team of the university's employment forum.
 
-- Research and consulting assistant for a professor's consulting group, writing my Bachelor thesis "Profitability model for the e-grocery business" based on a real consulting project with one of the leader supermarket chains in Spain, and receiving a national award for best thesis in supply chain management.
+- Research and consulting assistant for a professor's consulting group, writing my Bachelor Thesis "Profitability model for the e-grocery business" based on a real consulting project with one of the leader supermarket chains in Spain, and receiving a national award for best thesis in supply chain management.
 
 - UVigo's rugby team player (I really love rugby).
 
