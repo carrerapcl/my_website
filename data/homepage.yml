@@ -5,7 +5,7 @@ banner:
 # about
 about:
   enable : true
-  content : "I am an industrial engineer from Galicia, Spain, passionate about the financial industry and the endless potential of technology to revolutionalise this sector. I have come to London, one of the greatest financial hubs in the world, to study a Masters in Financial Analysis at London Business School and become a participant in the future of finance."
+  content : "I am an industrial engineer from Galicia, Spain, passionate about the endless potential of technology to revolutionalise entire industries and our society as a whole. I have come to London, one of the greatest financial and tech hubs in the world, to study a Masters in Financial Analysis at London Business School and build great things."
   button:
     enable : true
     label : "More about me and my CV"
